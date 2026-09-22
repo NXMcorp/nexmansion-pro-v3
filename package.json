@@ -9,14 +9,14 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "db:seed": "tsx scripts/seed.ts",
-    "db:reset": "rm -f prisma/dev.db prisma/dev.db-wal prisma/dev.db-shm && npm run db:seed",
+    "db:reset": "rm -f prisma/dev.db prisma/dev.db-wal prisma/dev.db-shm /tmp/nexmansion/dev.db /tmp/nexmansion/dev.db-wal /tmp/nexmansion/dev.db-shm && npm run db:seed",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "^12.2.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.441.0",
