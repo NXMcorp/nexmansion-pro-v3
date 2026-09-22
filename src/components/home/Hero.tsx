@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Calendar, Users, MapPin, ArrowRight } from "lucide-react";
+import { SafeImg } from "@/components/ui/SafeImage";
 
 export function Hero() {
   const router = useRouter();
@@ -25,8 +26,7 @@ export function Hero() {
   return (
     <section className="relative h-[100svh] min-h-[620px] w-full overflow-hidden" aria-label="Hero">
       <div className="absolute inset-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <SafeImg
           src="https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=2400&q=80"
           alt="Luxury cliffside villa in Bali at golden hour"
           className="h-full w-full object-cover"

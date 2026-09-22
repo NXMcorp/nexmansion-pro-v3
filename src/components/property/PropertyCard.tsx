@@ -1,16 +1,16 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Property } from "@/lib/types";
 import { formatMoneyMajor } from "@/lib/money";
 import { Badge } from "@/components/ui/Badge";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
 import { Star } from "lucide-react";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 export function PropertyCard({ property, isFavorite }: { property: Property; isFavorite?: boolean }) {
   return (
     <Link href={`/villas/${property.slug}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden bg-sand mb-4">
-        <Image
+        <SafeImage
           src={property.hero_image_url || ""}
           alt={property.name}
           fill

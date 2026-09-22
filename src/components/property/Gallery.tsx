@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { PropertyImage } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { SafeImage, SafeImg } from "@/components/ui/SafeImage";
 
 export function Gallery({
   images,
@@ -26,7 +26,7 @@ export function Gallery({
         className="col-span-4 md:col-span-2 relative overflow-hidden bg-sand group"
         aria-label="Open image gallery"
       >
-        <Image src={hero.url} alt={hero.alt || "Property"} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
+        <SafeImage src={hero.url} alt={hero.alt || "Property"} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
       </button>
       {grid.map((img, i) => (
         <button key={img.id} onClick={() => onOpen(i + 1)} className={cn(
@@ -34,7 +34,7 @@ export function Gallery({
           i === 3 ? "hidden md:block" : "hidden md:block",
           i >= 2 ? "" : ""
         )} aria-label={`View image ${i + 2}`}>
-          <Image src={img.url} alt={img.alt || ""} fill sizes="25vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          <SafeImage src={img.url} alt={img.alt || ""} fill sizes="25vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
           {i === 3 && rest.length > 4 ? (
             <div className="absolute inset-0 bg-midnight/50 flex items-center justify-center text-ivory text-[11px] tracking-[0.3em] uppercase">
               +{rest.length - 4} more
@@ -88,8 +88,7 @@ function Lightbox({
         <ChevronRight className="h-8 w-8" />
       </button>
       <div className="h-full w-full flex items-center justify-center p-4 md:p-16">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={img.url} alt={img.alt || ""} className="max-h-full max-w-full object-contain" />
+        <SafeImg src={img.url} alt={img.alt || ""} className="max-h-full max-w-full object-contain" />
       </div>
       <div className="absolute bottom-5 left-0 right-0 text-center text-ivory/70 text-[11px] tracking-[0.3em] uppercase">
         {index + 1} / {images.length} {img.caption ? `— ${img.caption}` : ""}

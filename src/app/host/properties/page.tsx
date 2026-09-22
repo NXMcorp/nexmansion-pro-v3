@@ -5,6 +5,7 @@ import db from "@/server/db";
 import { HostShell } from "@/components/host/HostShell";
 import { Badge } from "@/components/ui/Badge";
 import { formatMoneyMajor } from "@/lib/money";
+import { SafeImg } from "@/components/ui/SafeImage";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function HostProperties() {
         {properties.map(p => (
           <div key={p.id} className="bg-white border border-midnight/10 p-4 flex items-center gap-4">
             <div className="relative h-20 w-28 bg-sand overflow-hidden shrink-0">
-              {p.hero_image_url && <img src={p.hero_image_url} alt="" className="h-full w-full object-cover" />}
+              {p.hero_image_url && <SafeImg src={p.hero_image_url} alt="" className="h-full w-full object-cover" />}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">

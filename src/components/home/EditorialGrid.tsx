@@ -1,11 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Property } from "@/lib/types";
 import { formatMoneyMajor } from "@/lib/money";
 import { Badge } from "@/components/ui/Badge";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 export function EditorialGrid({ properties }: { properties: Property[] }) {
   // First card large, second medium, then standard grid
@@ -32,7 +32,7 @@ function EditorialCard({ property, size = "standard", priority = false }: { prop
       )}
     >
       <div className="relative h-full w-full overflow-hidden bg-sand">
-        <Image
+        <SafeImage
           src={property.hero_image_url || ""}
           alt={property.name}
           fill
