@@ -11,6 +11,11 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  experimental: {
+    // better-sqlite3 and bcryptjs contain native bindings and must stay external
+    // to the server bundle for Vercel serverless compatibility
+    serverComponentsExternalPackages: ["better-sqlite3", "bcryptjs"],
+  },
   headers: async () => [
     {
       source: "/:path*",

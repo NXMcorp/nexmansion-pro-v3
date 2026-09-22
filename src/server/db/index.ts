@@ -2,29 +2,187 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 
-// Database location. For production with Postgres, this module can be swapped
-// for a thin pg adapter with the same query signatures.
-const DB_DIR = path.join(process.cwd(), "prisma");
-const DB_PATH = process.env.DATABASE_PATH || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")
-  ? path.join(DB_DIR, process.env.DATABASE_URL.replace("file:", ""))
-  : path.join(DB_DIR, "dev.db"));
+// ---------------------------------------------------------------------------
+// Vercel serverless SQLite fix
+// ---------------------------------------------------------------------------
+// On Vercel, the filesystem is read-only except for /tmp. The original code
+// wrote to `prisma/dev.db` which fails with SQLITE_CANTOPEN / readonly errors
+// during serverless function execution.
+//
+// Fix:
+// - Detect Vercel / production serverless environment
+// - Use /tmp/nexmansion as writable directory
+// - Keep prisma/ for local dev
+// - If a bundled DB exists in prisma/ and /tmp DB is missing, copy it (best-effort)
+//   so seeded data can survive into the lambda when included in the build
+// - Maintain global singleton to reuse connection across HMR and lambda warm starts
+// - Ensure initSchema() still runs idempotently
+// ---------------------------------------------------------------------------
 
-if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
+function isVercelEnvironment(): boolean {
+  return (
+    !!process.env.VERCEL ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview" ||
+    process.env.VERCEL_ENV === "development" ||
+    process.env.NODE_ENV === "production" ||
+    process.env.USE_TMP_DB === "1"
+  );
+}
+
+function resolveDbPaths() {
+  const useTmp = isVercelEnvironment();
+  const cwd = process.cwd();
+  const fallbackDir = path.join(cwd, "prisma");
+  const tmpDir = path.join("/tmp", "nexmansion");
+
+  // Allow explicit override via DATABASE_PATH, but force it into /tmp when on Vercel
+  // unless the override already points inside /tmp.
+  let dir: string;
+  let filePath: string;
+
+  if (useTmp) {
+    if (
+      process.env.DATABASE_PATH &&
+      path.isAbsolute(process.env.DATABASE_PATH) &&
+      process.env.DATABASE_PATH.startsWith("/tmp/")
+    ) {
+      filePath = process.env.DATABASE_PATH;
+      dir = path.dirname(filePath);
+    } else if (process.env.DATABASE_PATH && path.isAbsolute(process.env.DATABASE_PATH)) {
+      // If user set an absolute path that is NOT in /tmp, remap file name into /tmp/nexmansion
+      // to avoid readonly FS errors. This is intentional for Vercel compatibility.
+      const base = path.basename(process.env.DATABASE_PATH);
+      dir = tmpDir;
+      filePath = path.join(dir, base || "dev.db");
+    } else if (process.env.DATABASE_URL?.startsWith("file:")) {
+      // DATABASE_URL=file:./prisma/dev.db or file:dev.db etc -> extract basename
+      const raw = process.env.DATABASE_URL.replace(/^file:/, "").trim();
+      const base = path.basename(raw) || "dev.db";
+      dir = tmpDir;
+      filePath = path.join(dir, base);
+    } else {
+      dir = tmpDir;
+      filePath = path.join(dir, "dev.db");
+    }
+  } else {
+    dir = fallbackDir;
+    if (process.env.DATABASE_PATH) {
+      filePath = path.isAbsolute(process.env.DATABASE_PATH)
+        ? process.env.DATABASE_PATH
+        : path.join(dir, process.env.DATABASE_PATH);
+    } else if (process.env.DATABASE_URL?.startsWith("file:")) {
+      const raw = process.env.DATABASE_URL.replace(/^file:/, "").trim();
+      // Support file:./prisma/dev.db, file:prisma/dev.db, file:dev.db
+      if (path.isAbsolute(raw)) {
+        filePath = raw;
+      } else {
+        // If raw already contains prisma/, avoid double-joining
+        const normalized = raw.replace(/^\.?\//, "");
+        filePath = normalized.includes("prisma/")
+          ? path.join(cwd, normalized)
+          : path.join(dir, path.basename(normalized) || "dev.db");
+      }
+    } else {
+      filePath = path.join(dir, "dev.db");
+    }
+  }
+
+  return { dir, filePath, useTmp, fallbackDir };
+}
+
+const { dir: DB_DIR, filePath: DB_PATH, useTmp, fallbackDir } = resolveDbPaths();
+
+// Ensure writable directory exists
+if (!fs.existsSync(DB_DIR)) {
+  fs.mkdirSync(DB_DIR, { recursive: true });
+}
+
+// Best-effort: if we are in /tmp mode and the DB doesn't exist yet, try to copy
+// a bundled prisma/dev.db if it was included in the deployment artifact.
+// Note: prisma/dev.db is gitignored, so in most Vercel deploys this won't exist
+// and we will start with an empty DB that initSchema() creates.
+if (useTmp) {
+  try {
+    const fallbackPath = path.join(fallbackDir, "dev.db");
+    const fallbackWal = `${fallbackPath}-wal`;
+    const fallbackShm = `${fallbackPath}-shm`;
+    if (!fs.existsSync(DB_PATH) && fs.existsSync(fallbackPath)) {
+      fs.copyFileSync(fallbackPath, DB_PATH);
+      // Copy WAL/SHM if present to avoid corruption, best-effort
+      try {
+        if (fs.existsSync(fallbackWal)) fs.copyFileSync(fallbackWal, `${DB_PATH}-wal`);
+      } catch {}
+      try {
+        if (fs.existsSync(fallbackShm)) fs.copyFileSync(fallbackShm, `${DB_PATH}-shm`);
+      } catch {}
+    }
+  } catch (e) {
+    console.warn("[db] Failed to copy fallback DB to /tmp/nexmansion:", e);
+  }
+}
 
 declare global {
   // eslint-disable-next-line no-var
   var __nx_db__: Database.Database | undefined;
+  // eslint-disable-next-line no-var
+  var __nx_db_path__: string | undefined;
 }
 
-export const db: Database.Database =
-  global.__nx_db__ || new Database(DB_PATH, { verbose: undefined });
+function createDbInstance(targetPath: string): Database.Database {
+  // Reuse existing global if path matches
+  if (global.__nx_db__ && global.__nx_db_path__ === targetPath) {
+    try {
+      // Quick health check
+      global.__nx_db__.prepare("SELECT 1").get();
+      return global.__nx_db__;
+    } catch {
+      // If health check fails, close and recreate
+      try {
+        global.__nx_db__.close();
+      } catch {}
+    }
+  } else if (global.__nx_db__) {
+    // Path changed (e.g., dev -> /tmp switch), close old
+    try {
+      global.__nx_db__.close();
+    } catch {}
+  }
 
-if (process.env.NODE_ENV !== "production") {
-  global.__nx_db__ = db;
+  const instance = new Database(targetPath, {
+    verbose: undefined,
+  });
+
+  // WAL mode is safe in /tmp (writable) and improves concurrency.
+  // On some serverless runtimes, DELETE mode is more stable, but WAL works
+  // as long as the directory is writable. We keep WAL and fallback gracefully.
+  try {
+    instance.pragma("journal_mode = WAL");
+  } catch {
+    try {
+      instance.pragma("journal_mode = DELETE");
+    } catch {}
+  }
+  instance.pragma("foreign_keys = ON");
+
+  global.__nx_db__ = instance;
+  global.__nx_db_path__ = targetPath;
+  return instance;
 }
 
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+export const db: Database.Database = createDbInstance(DB_PATH);
+
+// Always cache globally, including production, to reuse across lambda warm invocations
+global.__nx_db__ = db;
+global.__nx_db_path__ = DB_PATH;
+
+// Export helpers for debugging / tests
+export const __internal = {
+  DB_DIR,
+  DB_PATH,
+  useTmp,
+  isVercel: isVercelEnvironment(),
+};
 
 // ---------------------------------------------------------------------------
 // Schema initialisation (idempotent). For production, use migrations.
@@ -509,7 +667,7 @@ export function initSchema() {
   `);
 }
 
-// Utility: convert snake_case rows to camelCase if needed in future.
+// Initialize schema on module load (idempotent)
 initSchema();
 
 export default db;

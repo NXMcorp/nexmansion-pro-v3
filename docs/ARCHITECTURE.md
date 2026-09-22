@@ -67,3 +67,18 @@ The schema and queries in `src/server/db/index.ts` use standard SQL. To move to 
 4. Add Row-Level Security policies (predicates already exist per user/host in queries).
 
 The data model matches the spec exactly (countries → destinations → collections → properties, with bookings, payments, services, reviews, conversations, concierge, support, disputes, audit logs).
+
+## Vercel / Serverless SQLite fix
+
+`better-sqlite3` needs a writable file. On Vercel the filesystem is read-only except `/tmp`.
+
+- `src/server/db/index.ts` detects Vercel (`process.env.VERCEL`, `VERCEL_ENV`, or `NODE_ENV=production`) and switches:
+  - Local dev: `prisma/dev.db` (zero-setup)
+  - Vercel/serverless: `/tmp/nexmansion/dev.db` (writable)
+- The module ensures `/tmp/nexmansion` exists (`mkdir -p`), and best-effort copies a bundled `prisma/dev.db` into `/tmp` if present (useful when DB is baked into the build).
+- Global singleton (`global.__nx_db__` + path tracking) reuses the connection across HMR and lambda warm starts, avoiding `SQLITE_CANTOPEN`.
+- `journal_mode` tries `WAL` (needs writable dir) and falls back to `DELETE` for strict serverless runtimes.
+- `next.config.mjs` marks `better-sqlite3` and `bcryptjs` as `serverComponentsExternalPackages` so native bindings stay external.
+- `npm run db:reset` cleans both `prisma/` and `/tmp/nexmansion/` paths.
+
+Result: the app no longer crashes on Vercel with `attempt to write a readonly database` and boots with an empty (auto-migrated via `initSchema()`) DB that can be seeded via `npm run db:seed` locally or populated at runtime. For persistent prod data, swap the adapter to Postgres as described above.

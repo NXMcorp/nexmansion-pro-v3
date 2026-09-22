@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "db:seed": "tsx scripts/seed.ts",
-    "db:reset": "rm -f prisma/dev.db prisma/dev.db-wal prisma/dev.db-shm && npm run db:seed",
+    "db:reset": "rm -f prisma/dev.db prisma/dev.db-wal prisma/dev.db-shm /tmp/nexmansion/dev.db /tmp/nexmansion/dev.db-wal /tmp/nexmansion/dev.db-shm && npm run db:seed",
     "test": "vitest run",
     "test:watch": "vitest"
   },
