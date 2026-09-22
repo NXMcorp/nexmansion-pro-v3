@@ -127,6 +127,8 @@ declare global {
   var __nx_db__: Database.Database | undefined;
   // eslint-disable-next-line no-var
   var __nx_db_path__: string | undefined;
+  // eslint-disable-next-line no-var
+  var __nx_seeded__: boolean | undefined;
 }
 
 function createDbInstance(targetPath: string): Database.Database {
@@ -183,6 +185,30 @@ export const __internal = {
   useTmp,
   isVercel: isVercelEnvironment(),
 };
+
+// ---------------------------------------------------------------------------
+// Auto-seed for Vercel cold start
+// ---------------------------------------------------------------------------
+// On a fresh Vercel cold start /tmp/nexmansion/dev.db is empty because
+// prisma/dev.db is gitignored. initSchema() creates tables but no demo data.
+// We auto-seed only when in /tmp mode and tables are empty, idempotently.
+function ensureSeededIfEmpty() {
+  if (!useTmp) return;
+  if (global.__nx_seeded__) return;
+  try {
+    // Use require to avoid top-level circular import issues (seed.ts does not import from index.ts)
+    // eslint-disable-next-line
+    const seedModule = require("./seed") as typeof import("./seed");
+    if (seedModule.isDatabaseEmpty(db)) {
+      console.log("[db] Empty database detected in /tmp mode, seeding demo data (10 villas, users, collections)...");
+      seedModule.seedDatabase(db);
+      console.log("[db] Auto-seed complete");
+    }
+    global.__nx_seeded__ = true;
+  } catch (e) {
+    console.warn("[db] Auto-seed check/seed failed (non-fatal):", e);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Schema initialisation (idempotent). For production, use migrations.
@@ -669,5 +695,8 @@ export function initSchema() {
 
 // Initialize schema on module load (idempotent)
 initSchema();
+
+// Auto-seed for Vercel cold start if empty (idempotent, only in /tmp mode)
+ensureSeededIfEmpty();
 
 export default db;
