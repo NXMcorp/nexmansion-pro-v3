@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
+import { SafeImg } from "@/components/ui/SafeImage";
 
 interface Collection {
   slug: string;
@@ -26,8 +27,7 @@ export function ComingSoonCollections({ collections }: { collections: Collection
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-5 md:gap-6">
           {collections.map((c) => (
             <div key={c.slug} className="group relative aspect-[3/4] overflow-hidden bg-sand">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <SafeImg
                 src={c.hero_image_url || ""}
                 alt=""
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"

@@ -33,7 +33,7 @@ export type VillaSeed = {
   cancellation: string;
 };
 
-const VILLAS: VillaSeed[] = [
+export const VILLAS: VillaSeed[] = [
   {
     name: "Tanjong Cliff House",
     slug: "tanjong-cliff-house",
@@ -83,9 +83,9 @@ const VILLAS: VillaSeed[] = [
     ],
     images: [
       { id:"1566073771259-6a8506099945", alt:"Jungle infinity pool overlooking the valley" },
-      { id:"1542322896-33b9d2a1ed92", alt:"Traditional joglo living pavilion" },
+      { id:"1692736933760-8a8a9b8c1b6f", alt:"Traditional joglo living pavilion" },
       { id:"1512917774080-9991f1c4c750", alt:"Outdoor rain shower surrounded by foliage" },
-      { id:"1580646769770-3a68bd035a91", alt:"Yoga deck above the river at sunrise" },
+      { id:"1570559547560-fcba36b64fae", alt:"Yoga deck above the river at sunrise" },
       { id:"1522771739844-6a9f6d5f14af", alt:"Plunge pool with jungle view" },
     ],
     amenitySlugs: ["private-pool","jungle-view","ac","wifi","chef","yoga-deck","spa-services","housekeeping","ensuite","bathtub","kitchen","garden","workspace"],
@@ -149,7 +149,7 @@ const VILLAS: VillaSeed[] = [
       { id:"1582719508461-905c673771fd", alt:"Grand estate pool with traditional balustrades" },
       { id:"1540541338287-41700207dee6", alt:"Open-air dining pavilion at dusk" },
       { id:"1571896349842-33c89424de2d", alt:"Walled tropical gardens" },
-      { id:"1596891215458-1cb6f06a6dc6", alt:"Four-poster bedroom with silk drapery" },
+      { id:"1767050387941-b97f0d5a3232", alt:"Four-poster bedroom with silk drapery" },
       { id:"1560448204-e02f11c3d0e2", alt:"Outdoor lounge overlooking the pool" },
     ],
     amenitySlugs: ["private-pool","tennis","gym","spa-room","ac","wifi","chef","butler","nanny","security","housekeeping","ensuite","bathtub","kitchen","bbq","family","parking","events"],
@@ -180,8 +180,8 @@ const VILLAS: VillaSeed[] = [
     images: [
       { id:"1519046904884-53103b34b206", alt:"Beachfront pool and ocean horizon" },
       { id:"1507525428034-b723cf961d3e", alt:"White-sand beach with sun loungers" },
-      { id:"1571078133158-22a1c8b1d9d1", alt:"Travertine open living room" },
-      { id:"1545517090-5ed1ffce7fd5", alt:"Rooftop master terrace" },
+      { id:"1720161263981-84281892ee4b", alt:"Travertine open living room" },
+      { id:"1675657144361-98ae33e6b6f9", alt:"Rooftop master terrace" },
       { id:"1514282401047-d79a71a590e8", alt:"Aerial view of beachfront villa" },
     ],
     amenitySlugs: ["private-pool","beachfront","ocean-view","ac","wifi","chef","housekeeping","water-sports","ensuite","bathtub","kitchen","outdoor-bar","parking","workspace"],
@@ -210,7 +210,7 @@ const VILLAS: VillaSeed[] = [
       "Services — A couple's spa, flower bath, candle-lit dinner and motorcycle can be arranged privately.",
     ],
     images: [
-      { id:"1519455953427-8bd1c7f5d7cc", alt:"Intimate one-bedroom pool villa in the jungle" },
+      { id:"1646928229117-08e84cde1692", alt:"Intimate one-bedroom pool villa in the jungle" },
       { id:"1520250497591-112f2f40a3f4", alt:"Canopied four-poster bed" },
       { id:"1584622650111-993a426fbf0a", alt:"Terrazzo bath for two surrounded by frangipani" },
       { id:"1540541338287-41700207dee6", alt:"Private terrace over the valley" },
@@ -244,8 +244,8 @@ const VILLAS: VillaSeed[] = [
     images: [
       { id:"1520250497591-112f2f40a3f4", alt:"Whitewashed beach house deck at golden hour" },
       { id:"1507525428034-b723cf961d3e", alt:"Beach loungers on black sand" },
-      { id:"1571078133158-22a1c8b1d9d1", alt:"Open-plan beach house interior" },
-      { id:"1519455953427-8bd1c7f5d7cc", alt:"Outdoor dining facing the ocean" },
+      { id:"1658190579991-65472a8b7b05", alt:"Open-plan beach house interior" },
+      { id:"1651108066220-f61c22fc281f", alt:"Outdoor dining facing the ocean" },
       { id:"1600607687939-ce8a6c25118c", alt:"Pool and tropical garden beside the beach" },
     ],
     amenitySlugs: ["private-pool","beachfront","ocean-view","ac","wifi","housekeeping","breakfast","ensuite","outdoor-shower","kitchen","bbq","surf-storage","family"],
@@ -308,7 +308,7 @@ const VILLAS: VillaSeed[] = [
     images: [
       { id:"1600566753190-17f0baa2a6c3", alt:"Infinity pool overlooking tiered rice terraces" },
       { id:"1566073771259-6a8506099945", alt:"Alang-alang thatched roof pavilion" },
-      { id:"1580646769770-3a68bd035a91", alt:"Rice terraces at sunrise" },
+      { id:"1555400038-63f5ba517a47", alt:"Rice terraces at sunrise" },
       { id:"1560185007-cde436f6a4d0", alt:"Garden bathroom with outdoor shower" },
       { id:"1600585154340-be6161a56a0c", alt:"Frangipani-lined pool deck" },
     ],
@@ -358,7 +358,7 @@ const VILLAS: VillaSeed[] = [
 
 
 
-const AMENITIES = [
+export const AMENITIES = [
   { name: "Private pool", slug: "private-pool", category: "outdoor" },
   { name: "Infinity pool", slug: "infinity-pool", category: "outdoor" },
   { name: "Air conditioning", slug: "ac", category: "essentials" },

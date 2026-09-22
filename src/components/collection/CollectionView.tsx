@@ -1,9 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getCollectionBySlug, getPublishedProperties, getRegionsForDestination, getAmenityCategories } from "@/server/db/properties";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { FiltersBar } from "@/components/collection/FiltersBar";
 import { notFound } from "next/navigation";
+import { SafeImg } from "@/components/ui/SafeImage";
 
 export function CollectionView({ slug, searchParams }: { slug: string; searchParams: Record<string, string | undefined> }) {
   const collection = getCollectionBySlug(slug);
@@ -33,8 +33,7 @@ export function CollectionView({ slug, searchParams }: { slug: string; searchPar
     <>
       <section className="relative h-[60vh] min-h-[420px] w-full overflow-hidden">
         <div className="absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <SafeImg
             src={collection.hero_image_url || ""}
             alt=""
             className="h-full w-full object-cover"
