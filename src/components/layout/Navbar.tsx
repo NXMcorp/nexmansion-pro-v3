@@ -37,12 +37,21 @@ export function Navbar() {
   const onHome = pathname === "/";
   const transparent = onHome && !scrolled;
 
+  const role = (session?.user as any)?.role as string | undefined;
+
   const dashboardHref =
-    session?.user && (session.user as any).role === "ADMIN"
+    role === "ADMIN" || role === "SUPPORT"
       ? "/admin"
-      : (session?.user as any)?.role === "HOST"
+      : role === "HOST"
       ? "/host"
       : "/account";
+
+  const dashboardLabel =
+    role === "ADMIN" || role === "SUPPORT"
+      ? "Operations"
+      : role === "HOST"
+      ? "Host Dashboard"
+      : "My Account";
 
   return (
     <header
@@ -108,17 +117,23 @@ export function Navbar() {
                   <ul className="py-1">
                     <li>
                       <Link href={dashboardHref} className="block px-4 py-2 text-xs uppercase tracking-widest hover:bg-sand">
-                        Dashboard
+                        {dashboardLabel}
                       </Link>
                     </li>
-                    {(session.user as any).role === "TRAVELLER" && (
+                    {(role === "TRAVELLER") && (
                       <>
                         <li><Link href="/account/trips" className="block px-4 py-2 text-xs uppercase tracking-widest hover:bg-sand">My Trips</Link></li>
                         <li><Link href="/account/wishlist" className="block px-4 py-2 text-xs uppercase tracking-widest hover:bg-sand flex items-center gap-2"><Heart className="h-3 w-3"/> Wishlist</Link></li>
                       </>
                     )}
-                    {(session.user as any).role === "HOST" && (
+                    {(role === "HOST") && (
                       <li><Link href="/host/properties" className="block px-4 py-2 text-xs uppercase tracking-widest hover:bg-sand">My Properties</Link></li>
+                    )}
+                    {(role === "ADMIN" || role === "SUPPORT") && (
+                      <>
+                        <li><Link href="/admin/properties" className="block px-4 py-2 text-xs uppercase tracking-widest hover:bg-sand">Properties</Link></li>
+                        <li><Link href="/admin/bookings" className="block px-4 py-2 text-xs uppercase tracking-widest hover:bg-sand">Bookings</Link></li>
+                      </>
                     )}
                     <li>
                       <button
@@ -168,7 +183,22 @@ export function Navbar() {
             <li className="pt-6 border-t border-ivory/10 space-y-4">
               {session?.user ? (
                 <>
-                  <Link href={dashboardHref} className="block text-lg">Dashboard</Link>
+                  <Link href={dashboardHref} className="block text-lg">{dashboardLabel}</Link>
+                  {role === "TRAVELLER" && (
+                    <>
+                      <Link href="/account/trips" className="block text-base opacity-80">My Trips</Link>
+                      <Link href="/account/wishlist" className="block text-base opacity-80">Wishlist</Link>
+                    </>
+                  )}
+                  {role === "HOST" && (
+                    <Link href="/host/properties" className="block text-base opacity-80">My Properties</Link>
+                  )}
+                  {(role === "ADMIN" || role === "SUPPORT") && (
+                    <>
+                      <Link href="/admin/properties" className="block text-base opacity-80">Properties</Link>
+                      <Link href="/admin/bookings" className="block text-base opacity-80">Bookings</Link>
+                    </>
+                  )}
                   <button onClick={() => signOut({ callbackUrl: "/" })} className="text-sm text-gold uppercase tracking-widest">Sign out</button>
                 </>
               ) : (
